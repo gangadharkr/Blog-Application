@@ -7,38 +7,34 @@ Supports users, posts, categories, and comments with **role-based authentication
 
 ## 🚀 Features
 - User registration & authentication
-- Role-based access control (ADMIN / USER)
+- Role-based access control (`ADMIN` / `USER`)
 - Create, update, delete, and view blog posts
 - Categories for organizing posts
 - Commenting system
 - Spring Security with `UserDetailsService`
 - Passwords stored securely with **BCrypt**
 - Configurable database & file upload support
-- Extensible to JWT authentication (future-ready)
+- Extensible to **JWT authentication** (future-ready)
 
 ---
 
 ## 📂 Project Structure
-
+```text
 src/main/java/com/project/blog
-├── controller/ # REST controllers (Users, Posts, Auth, etc.)
-├── payloads/ # DTOs (UserDto, etc.)
-├── exceptions/ # Custom exception classes & handler
-├── model/ # Entities: User, Role, Post, Comment, Category
-├── repository/ # JPA repositories
-├── service/ # Service interfaces
-├── service/impl/ # Service implementations
-├── config/ # Security & app config
-└── security/ # CustomUserDetailService, (JWT classes if added later)
-
-
----
-
-## ⚙️ Configuration
-
-`src/main/resources/application.properties`
-
-```properties
+├── controller/       # REST controllers (Users, Posts, Auth, etc.)
+├── payloads/         # DTOs (UserDto, etc.)
+├── exceptions/       # Custom exception classes & handler
+├── model/            # Entities: User, Role, Post, Comment, Category
+├── repository/       # JPA repositories
+├── service/          # Service interfaces
+├── service/impl/     # Service implementations
+├── config/           # Security & app config
+└── security/         # CustomUserDetailService, (JWT classes if added later)
+⚙️ Configuration
+src/main/resources/application.properties
+properties
+Copy
+Edit
 # Application
 spring.application.name=blog-application
 server.port=9090
@@ -66,24 +62,35 @@ logging.level.org.springframework.security=DEBUG
 # app.jwt.secret=replace_with_a_very_long_random_secret_at_least_32_chars
 # app.jwt.expiration-ms=3600000
 # app.jwt.issuer=blog-api
-
-🔔 Note:
-Do not keep spring.security.user.name or spring.security.user.password if using DB users.
-They create in-memory users and may cause conflicts.
-
 🗄️ Database Setup
 1️⃣ Create the database
+sql
+Copy
+Edit
 CREATE DATABASE blog_app_apis;
-
 2️⃣ Auto-create tables
+Hibernate will generate tables for:
 
-Hibernate will generate tables for users, roles, user_role, posts, comments, categories.
+users
+
+roles
+
+user_role
+
+posts
+
+comments
+
+categories
 
 3️⃣ Insert roles & a test user
-
-⚠️ Passwords must be BCrypt hashes.
+⚠️ Passwords must be stored as BCrypt hashes.
 
 Generate a hash:
+
+java
+Copy
+Edit
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 public class HashGenerator {
@@ -91,9 +98,11 @@ public class HashGenerator {
         System.out.println(new BCryptPasswordEncoder().encode("password"));
     }
 }
-
 Example SQL:
 
+sql
+Copy
+Edit
 INSERT INTO roles (id, name) VALUES (1, 'ROLE_USER');
 INSERT INTO roles (id, name) VALUES (2, 'ROLE_ADMIN');
 
@@ -104,8 +113,10 @@ VALUES (1, 'Test User', 'what@gmail.com', '<BCryptHashHere>', 'Test user for API
 -- Link user to roles
 INSERT INTO user_role (user_id, role_id) VALUES (1, 1); -- ROLE_USER
 INSERT INTO user_role (user_id, role_id) VALUES (1, 2); -- ROLE_ADMIN
-
 ▶️ Run the Project
+bash
+Copy
+Edit
 git clone https://github.com/your-username/blog-application.git
 cd blog-application
 
@@ -114,58 +125,50 @@ mvn clean install
 
 # Run
 mvn spring-boot:run
-
-
 Runs on 👉 http://localhost:9090
 
 📌 API Endpoints
 🔐 Authentication
-
-Basic Auth: Provide email + password in request headers.
+Basic Auth: Provide email + password in request headers
 
 👤 Users
-
-POST /api/users → Register new user
-
-GET /api/users → List all users
-
-GET /api/users/{id} → Get user by ID
-
-PUT /api/users/{id} → Update user
-
-DELETE /api/users/{id} → Delete user
-
+http
+Copy
+Edit
+POST   /api/users        → Register new user
+GET    /api/users        → List all users
+GET    /api/users/{id}   → Get user by ID
+PUT    /api/users/{id}   → Update user
+DELETE /api/users/{id}   → Delete user
 📝 Posts
-
-POST /api/posts → Create post
-
-GET /api/posts → List posts
-
-GET /api/posts/{id} → Get post by ID
-
-PUT /api/posts/{id} → Update post
-
-DELETE /api/posts/{id} → Delete post
-
+http
+Copy
+Edit
+POST   /api/posts        → Create post
+GET    /api/posts        → List posts
+GET    /api/posts/{id}   → Get post by ID
+PUT    /api/posts/{id}   → Update post
+DELETE /api/posts/{id}   → Delete post
 📂 Categories
-
-POST /api/categories → Create category
-
-GET /api/categories → List categories
-
+http
+Copy
+Edit
+POST   /api/categories   → Create category
+GET    /api/categories   → List categories
 💬 Comments
-
-POST /api/posts/{postId}/comments → Add comment
-
-DELETE /api/comments/{id} → Delete comment
-
+http
+Copy
+Edit
+POST   /api/posts/{postId}/comments  → Add comment
+DELETE /api/comments/{id}            → Delete comment
 🛠️ Usage Examples
 Using curl
+bash
+Copy
+Edit
 curl -u what@gmail.com:password \
   -X GET "http://localhost:9090/api/posts"
-
 Using Postman
-
 Go to Authorization → Basic Auth
 
 Username: what@gmail.com
@@ -173,15 +176,13 @@ Username: what@gmail.com
 Password: password
 
 🔒 Authentication Details
+Custom UserDetailsService loads users by email
 
-Custom UserDetailsService loads users by email.
+Passwords stored with BCryptPasswordEncoder
 
-Passwords stored with BCryptPasswordEncoder.
-
-Ensure DB users have BCrypt passwords.
+Ensure DB users have BCrypt hashed passwords
 
 🔮 Future Improvements
-
 ✅ Add JWT authentication + refresh tokens
 
 ✅ Add Swagger / OpenAPI docs
@@ -195,15 +196,11 @@ Ensure DB users have BCrypt passwords.
 ✅ Dockerize with docker-compose
 
 👤 Author
-
 Gangadhar Pandit
 
 📧 Email: your.email@example.com
-
-💼 LinkedIn: https://linkedin.com/in/your-profile
-
-🐙 GitHub: https://github.com/your-username
+💼 LinkedIn: linkedin.com/in/your-profile
+🐙 GitHub: github.com/your-username
 
 📜 License
-
 Released under the MIT License — free to use, modify, and share.
