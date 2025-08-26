@@ -1,81 +1,42 @@
 # 📝 Blog Application (Spring Boot)
 
-A full-featured **Blog Application** built with **Spring Boot** (Java 17).  
-Features include Users, Roles, Posts, Comments, Categories, secure password storage (BCrypt), and REST APIs.  
-Authentication currently uses **Spring Security (Basic Auth)**; JWT support can be added (instructions included).
+A blogging platform built using **Spring Boot 3**, **Spring Security 6**, **JPA/Hibernate**, and **MySQL**.  
+Supports users, posts, categories, and comments with **role-based authentication** (Basic Auth for now, JWT optional).
 
 ---
 
-## 🔖 Table of Contents
-- [Features](#features)  
-- [Tech Stack](#tech-stack)  
-- [Prerequisites](#prerequisites)  
-- [Project Structure](#project-structure)  
-- [Configuration (`application.properties`)](#configuration-applicationproperties)  
-- [Database Setup & Sample Data](#database-setup--sample-data)  
-- [Run the Project](#run-the-project)  
-- [API Endpoints & Examples](#api-endpoints--examples)  
-- [Authentication (Basic Auth)](#authentication-basic-auth)  
-- [How to Add JWT (Short Guide)](#how-to-add-jwt-short-guide)  
-- [Common Troubleshooting](#common-troubleshooting)  
-- [Future Improvements](#future-improvements)  
-- [Author & Contact](#author--contact)  
-- [License](#license)
+## 🚀 Features
+- User registration & authentication
+- Role-based access control (ADMIN / USER)
+- Create, update, delete, and view blog posts
+- Categories for organizing posts
+- Commenting system
+- Spring Security with `UserDetailsService`
+- Passwords stored securely with **BCrypt**
+- Configurable database & file upload support
+- Extensible to JWT authentication (future-ready)
 
 ---
 
-## Features
-- ✅ User registration, update, delete  
-- ✅ Role-based access control (`ROLE_USER`, `ROLE_ADMIN`)  
-- ✅ CRUD for Posts, Comments, Categories  
-- ✅ Passwords stored securely with **BCrypt**  
-- ✅ ModelMapper for DTO → Entity mapping  
-- ✅ Centralized exception handling (custom exceptions)  
-- ✅ MySQL + Spring Data JPA (Hibernate)  
-- ✅ Basic Authentication (Spring Security) — extensible to JWT
+## 📂 Project Structure
 
----
-
-## Tech Stack
-- Java 17  
-- Spring Boot 3.x  
-- Spring Security 6.x  
-- Spring Data JPA, Hibernate  
-- MySQL (or MariaDB)  
-- Maven  
-- ModelMapper, Lombok (optional)  
-- Postman / curl (for API testing)
-
----
-
-## Prerequisites
-- Java 17 (JDK)
-- Maven 3.6+
-- MySQL server
-- IDE (IntelliJ / Eclipse recommended)
-
----
-
-## Project Structure
 src/main/java/com/project/blog
-├─ controller/ # REST controllers (Users, Posts, Auth, etc.)
-├─ payloads/ # DTOs (UserDto, JwtRequest, etc.)
-├─ exceptions/ # Custom exception classes & handler
-├─ model/ # Entities: User, Role, Post, Comment, Category
-├─ repository/ # JPA repositories
-├─ service/ # Service interfaces
-├─ service/impl/ # Service implementations
-├─ config/ # Security & app config
-└─ security/ # CustomUserDetailService, JWT classes (optional)
+├── controller/ # REST controllers (Users, Posts, Auth, etc.)
+├── payloads/ # DTOs (UserDto, etc.)
+├── exceptions/ # Custom exception classes & handler
+├── model/ # Entities: User, Role, Post, Comment, Category
+├── repository/ # JPA repositories
+├── service/ # Service interfaces
+├── service/impl/ # Service implementations
+├── config/ # Security & app config
+└── security/ # CustomUserDetailService, (JWT classes if added later)
 
-yaml
-Copy
-Edit
 
 ---
 
-## Configuration (`application.properties`)
-Replace values with your credentials and secure secrets.
+## ⚙️ Configuration
+
+`src/main/resources/application.properties`
 
 ```properties
 # Application
@@ -98,224 +59,151 @@ spring.servlet.multipart.max-file-size=10MB
 spring.servlet.multipart.max-request-size=10MB
 project.image=images/
 
-# Logging (helps debugging authentication)
+# Logging
 logging.level.org.springframework.security=DEBUG
 
-# JWT (if you add JWT later — example properties)
+# (Optional, for JWT later)
 # app.jwt.secret=replace_with_a_very_long_random_secret_at_least_32_chars
 # app.jwt.expiration-ms=3600000
 # app.jwt.issuer=blog-api
-Note: Do not keep spring.security.user.name / spring.security.user.password if you rely on DB-stored users. Those properties create an in-memory user and can be confusing during development.
 
-Database Setup & Sample Data
-1) Create the database
-sql
-Copy
-Edit
+🔔 Note:
+Do not keep spring.security.user.name or spring.security.user.password if using DB users.
+They create in-memory users and may cause conflicts.
+
+🗄️ Database Setup
+1️⃣ Create the database
 CREATE DATABASE blog_app_apis;
-2) Let JPA create tables
-With spring.jpa.hibernate.ddl-auto=update, Hibernate will auto-create tables from your entities (Users, Roles, user_roles, posts, comments, categories).
 
-3) Insert roles and a test user (recommended approach)
-Important: passwords must be BCrypt hashes. Use the Java snippet below to generate the hash or use your application to register a user (recommended).
+2️⃣ Auto-create tables
 
-Java snippet to generate BCrypt hash (run once or in a simple main class):
+Hibernate will generate tables for users, roles, user_role, posts, comments, categories.
 
-java
-Copy
-Edit
+3️⃣ Insert roles & a test user
+
+⚠️ Passwords must be BCrypt hashes.
+
+Generate a hash:
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 public class HashGenerator {
     public static void main(String[] args) {
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        System.out.println(encoder.encode("password")); // replace "password"
+        System.out.println(new BCryptPasswordEncoder().encode("password"));
     }
 }
-Example SQL (replace <BCryptHashHere> with actual output from snippet):
 
-sql
-Copy
-Edit
+Example SQL:
+
 INSERT INTO roles (id, name) VALUES (1, 'ROLE_USER');
 INSERT INTO roles (id, name) VALUES (2, 'ROLE_ADMIN');
 
--- Insert test user (email = what@gmail.com). Replace hashed password.
+-- Insert test user
 INSERT INTO users (id, name, email, password, about)
 VALUES (1, 'Test User', 'what@gmail.com', '<BCryptHashHere>', 'Test user for API');
 
--- Link user to role(s)
+-- Link user to roles
 INSERT INTO user_role (user_id, role_id) VALUES (1, 1); -- ROLE_USER
--- optionally:
 INSERT INTO user_role (user_id, role_id) VALUES (1, 2); -- ROLE_ADMIN
-4) Quick migration (optional)
-If you have many users with plain-text passwords, you can write a one-time Spring CommandLineRunner to encode all plain passwords (we provided a snippet earlier).
 
-Run the Project
-Clone the repo:
-
-bash
-Copy
-Edit
+▶️ Run the Project
 git clone https://github.com/your-username/blog-application.git
 cd blog-application
-Configure application.properties (DB credentials, port, etc.)
 
-Build and run:
-
-bash
-Copy
-Edit
+# Build
 mvn clean install
+
+# Run
 mvn spring-boot:run
-or run from IDE (run Application main class).
 
-App runs at: http://localhost:9090 (if using server.port=9090)
 
-API Endpoints & Examples
-Base URL: http://localhost:9090
+Runs on 👉 http://localhost:9090
 
-Auth (Basic)
-No dedicated login endpoint required for Basic Auth — supply credentials via HTTP Basic (Postman or curl).
+📌 API Endpoints
+🔐 Authentication
 
-Users
-POST /api/users — Register (call UserService.registerUser(...) which will encode password before saving)
+Basic Auth: Provide email + password in request headers.
 
-GET /api/users — Get all users
+👤 Users
 
-GET /api/users/{id} — Get user by id
+POST /api/users → Register new user
 
-PUT /api/users/{id} — Update user
+GET /api/users → List all users
 
-DELETE /api/users/{id} — Delete user
+GET /api/users/{id} → Get user by ID
 
-Posts
-POST /api/posts — Create post
+PUT /api/users/{id} → Update user
 
-GET /api/posts — List posts
+DELETE /api/users/{id} → Delete user
 
-GET /api/posts/{id} — Get post
+📝 Posts
 
-PUT /api/posts/{id} — Update post
+POST /api/posts → Create post
 
-DELETE /api/posts/{id} — Delete post
+GET /api/posts → List posts
 
-Categories
-POST /api/categories — Create category
+GET /api/posts/{id} → Get post by ID
 
-GET /api/categories — List categories
+PUT /api/posts/{id} → Update post
 
-Comments
-POST /api/posts/{postId}/comments — Add comment
+DELETE /api/posts/{id} → Delete post
 
-DELETE /api/comments/{id} — Delete comment
+📂 Categories
 
-Usage Examples
-Call an endpoint using curl with Basic Auth:
-bash
-Copy
-Edit
+POST /api/categories → Create category
+
+GET /api/categories → List categories
+
+💬 Comments
+
+POST /api/posts/{postId}/comments → Add comment
+
+DELETE /api/comments/{id} → Delete comment
+
+🛠️ Usage Examples
+Using curl
 curl -u what@gmail.com:password \
   -X GET "http://localhost:9090/api/posts"
-(If using the username what@gmail.com with password password — ensure password is the user's original plain value and DB holds the BCrypt hash.)
 
-Using Postman (Basic Auth)
-Open Postman → New Request
+Using Postman
 
-Authorization tab → Type: Basic Auth
+Go to Authorization → Basic Auth
 
 Username: what@gmail.com
+
 Password: password
 
-Send requests to protected endpoints.
+🔒 Authentication Details
 
-Authentication (Basic Auth)
-The project uses Spring Security with UserDetailsService that loads users by email.
+Custom UserDetailsService loads users by email.
 
-Passwords are validated with BCryptPasswordEncoder.
+Passwords stored with BCryptPasswordEncoder.
 
-Make sure:
+Ensure DB users have BCrypt passwords.
 
-Users exist in DB with BCrypt-hashed password.
+🔮 Future Improvements
 
-CustomUserDetailService returns UserDetails with proper authorities.
+✅ Add JWT authentication + refresh tokens
 
-If you see 401 Unauthorized, check:
+✅ Add Swagger / OpenAPI docs
 
-Credentials passed correctly
+✅ Pagination & sorting for posts
 
-Password is BCrypt-hashed in DB
+✅ File/image upload for posts & avatars
 
-CustomUserDetailService.loadUserByUsername finds user by email
+✅ Unit & integration tests
 
-How to Add JWT (Short Guide)
-If you decide to replace or add token-based authentication later, the steps are:
+✅ Dockerize with docker-compose
 
-Add JJWT dependencies to pom.xml:
+👤 Author
 
-xml
-Copy
-Edit
-io.jsonwebtoken:jjwt-api:0.11.5
-io.jsonwebtoken:jjwt-impl:0.11.5 (runtime)
-io.jsonwebtoken:jjwt-jackson:0.11.5 (runtime)
-Add JWT properties to application.properties:
-
-properties
-Copy
-Edit
-app.jwt.secret=very_long_random_secret_32_chars_min
-app.jwt.expiration-ms=3600000
-app.jwt.issuer=blog-api
-Add:
-
-JwtService (generate/validate token)
-
-JwtAuthenticationFilter (OncePerRequestFilter to read Authorization: Bearer <token> header)
-
-AuthController login endpoint that returns token
-
-Update SecurityConfig to add filter and use stateless sessions (keep Basic Auth if desired)
-
-I can provide ready-to-paste JWT files if you want to integrate it later — I have provided those earlier in the conversation.
-
-Common Troubleshooting
-401 Unauthorized when credentials are correct
-Verify the DB password is BCrypt-encoded.
-
-Check log logging.level.org.springframework.security=DEBUG to see which user loads and why authentication failed.
-
-Ensure CustomUserDetailService is returning the correct username (email) and getPassword() returns the hashed password.
-
-Role / join table issues
-Make sure Role.id is numeric (use int or long) when using @GeneratedValue. String with IDENTITY will prevent table creation.
-
-Use @JoinTable(name="user_role", joinColumns=@JoinColumn(name="user_id"), inverseJoinColumns=@JoinColumn(name="role_id")) — avoid reserved words like user as column names.
-
-WebSecurityConfigurerAdapter errors
-For Spring Security 6+, do NOT extend WebSecurityConfigurerAdapter. Provide a @Bean SecurityFilterChain and AuthenticationManager instead.
-
-Future Improvements (Roadmap)
-Add JWT authentication + refresh tokens (stateless)
-
-Add Swagger / OpenAPI docs (springdoc-openapi)
-
-Add pagination & sorting for posts
-
-Add file/image upload for posts & user avatars
-
-Add unit + integration tests (JUnit + MockMvc)
-
-Containerize with Docker + docker-compose for DB
-
-Author / Contact
 Gangadhar Pandit
-Email: (add your email here)
-LinkedIn: (add your LinkedIn profile link)
-GitHub: (add GitHub link)
 
-License
-This project is released under the MIT License — feel free to copy, modify, and use as a learning/demo project.
+📧 Email: your.email@example.com
 
+💼 LinkedIn: https://linkedin.com/in/your-profile
 
+🐙 GitHub: https://github.com/your-username
 
+📜 License
+
+Released under the MIT License — free to use, modify, and share.
